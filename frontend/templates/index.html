@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="化实：支持聊天附件、连续文件问答和流式回答的化学实验学习智能助手">
+  <title>化实 · 化学实验学习智能助手</title>
+  <link rel="icon" href="/static/images/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body data-max-file-size-mb="{{ max_file_size_mb }}" data-max-attachments="{{ max_attachments }}"
+  data-heartbeat-enabled="{{ 'true' if heartbeat_enabled else 'false' }}"
+  data-heartbeat-interval-seconds="{{ heartbeat_interval_seconds }}">
+  <div class="lab-orbit orbit-a" aria-hidden="true"></div>
+  <div class="lab-orbit orbit-b" aria-hidden="true"></div>
+
+  <div class="app-shell">
+    <aside class="sidebar">
+      <a class="brand" href="/" aria-label="化实首页">
+        <img src="/static/images/logo.svg" alt="恐龙头骨泡在烧杯液体中的化实 Logo">
+        <div><strong>化实</strong><span>HUASHI LAB</span></div>
+      </a>
+
+      <p class="brand-copy">面向化学实验学习的安全型智能助手。可读资料、查来源、理报告，也会在危险请求前及时踩刹车。</p>
+
+      <button id="newSessionButton" class="primary-button full-width" type="button">
+        <span aria-hidden="true">＋</span> 新建会话
+      </button>
+
+      <section class="side-card identity-card" aria-labelledby="identityTitle">
+        <div class="card-heading"><span class="icon-chip">ID</span><h2 id="identityTitle">当前会话</h2></div>
+        <label for="userIdInput">user_id</label>
+        <input id="userIdInput" maxlength="120" autocomplete="off">
+        <div class="id-row"><span>thread_id</span><code id="threadIdValue">准备中…</code></div>
+      </section>
+
+      <section class="side-card abilities" aria-labelledby="abilityTitle">
+        <div class="card-heading"><span class="icon-chip">⚗</span><h2 id="abilityTitle">我能帮你</h2></div>
+        <ul>
+          <li><span>01</span>解释概念、现象与实验步骤</li>
+          <li><span>02</span>上传资料后连续追问</li>
+          <li><span>03</span>联网检索并保留来源</li>
+          <li><span>04</span>整理学习笔记与报告</li>
+        </ul>
+      </section>
+
+      <button id="openWriteFileButton" class="quiet-button full-width" type="button">✎ 保存学习笔记</button>
+
+      <div class="safety-note">
+        <span class="shield" aria-hidden="true">◆</span>
+        <p><strong>实验安全优先</strong><br>高风险请求只提供原理、风险和安全替代，不提供可直接执行的危险步骤。</p>
+      </div>
+    </aside>
+
+    <main class="main-panel">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">CHEMISTRY LEARNING COPILOT</p>
+          <h1>把资料放进对话里，边读边问</h1>
+          <p>PDF、Office、图片和文本都可作为当前会话资料；解析完成后可持续追问。</p>
+        </div>
+        <div class="health-badge" id="healthBadge"><span></span>正在检查服务</div>
+      </header>
+
+      <section class="chat-card" aria-label="化实聊天区域">
+        <div id="messageList" class="message-list" aria-live="polite">
+          <article class="message assistant-message welcome-message">
+            <img class="avatar" src="/static/images/favicon.svg" alt="">
+            <div class="message-body">
+              <div class="message-label">化实</div>
+              <div class="bubble">
+                <strong>你好，我是化实。</strong>
+                <p>把实验报告、课件或笔记直接附在输入框旁边，我会先解析，再依据文件回答。后续不必重复上传，同一会话可以继续追问。</p>
+              </div>
+              <div class="quick-prompts" aria-label="示例问题">
+                <button type="button">总结附件中的实验目的和结论</button>
+                <button type="button">指出报告中的误差来源和改进建议</button>
+                <button type="button">结合联网资料补充文件中的理论背景</button>
+              </div>
+            </div>
+          </article>
+        </div>
+
+        <div id="processBar" class="process-bar" hidden aria-live="polite">
+          <span class="process-spinner" aria-hidden="true"></span>
+          <span id="processText">正在处理</span>
+        </div>
+
+        <div id="threadAttachmentBar" class="thread-attachments" hidden>
+          <div class="thread-attachments-title">
+            <span>本会话资料</span>
+            <small>后续问题会继续参考已解析文件</small>
+          </div>
+          <div id="threadAttachmentList" class="thread-attachment-list"></div>
+        </div>
+
+        <form id="chatForm" class="composer">
+          <div id="selectedAttachmentList" class="selected-attachments" hidden aria-live="polite"></div>
+          <div class="composer-main">
+            <button id="attachmentButton" class="attachment-button" type="button" title="添加聊天附件" aria-label="添加聊天附件">
+              <span aria-hidden="true">⌁</span>
+            </button>
+            <input id="attachmentInput" type="file" multiple hidden
+              accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt,.md,.png,.jpg,.jpeg">
+            <label class="sr-only" for="messageInput">输入问题</label>
+            <textarea id="messageInput" rows="2" maxlength="20000" placeholder="输入问题，或只附上文件让化实询问你的处理目标…"></textarea>
+            <button id="sendButton" class="send-button" type="submit">
+              <span>发送</span><span aria-hidden="true">➜</span>
+            </button>
+          </div>
+          <div class="composer-footer">
+            <span id="attachmentHint">支持 PDF、Office、图片、TXT、Markdown</span>
+            <span>Enter 发送 · Shift + Enter 换行</span>
+          </div>
+        </form>
+      </section>
+
+      <footer class="page-footer">
+        文件内容仅用于当前学习会话；服务重启后附件上下文可能失效。本项目不能替代教师、实验室负责人或 SDS。
+      </footer>
+    </main>
+  </div>
+
+  <dialog id="writeFileDialog" class="note-dialog">
+    <form id="writeFileForm" method="dialog">
+      <div class="dialog-heading">
+        <div><span>LEARNING NOTE</span><h2>保存学习笔记</h2></div>
+        <button id="closeWriteFileButton" class="icon-button" type="button" aria-label="关闭">×</button>
+      </div>
+      <label for="fileNameInput">文件名</label>
+      <input id="fileNameInput" name="filename" value="学习笔记.md" required>
+      <label for="fileContentInput">内容</label>
+      <textarea id="fileContentInput" name="content" rows="8" placeholder="输入要保存的笔记或实验报告草稿…" required></textarea>
+      <p id="writeFileStatus" class="form-status" aria-live="polite"></p>
+      <div class="dialog-actions">
+        <button class="quiet-button" type="button" id="cancelWriteFileButton">取消</button>
+        <button class="primary-button" type="submit">保存到 workspace/outputs</button>
+      </div>
+    </form>
+  </dialog>
+
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+  <script type="module" src="/static/js/app.js"></script>
+</body>
+</html>
