@@ -8,6 +8,8 @@
 
 “化实”是一个基于 LangChain 1.2、LangGraph、Pydantic、Tavily、MinerU 与 FastAPI 的单智能体学习项目。项目同时提供 CLI 与轻量中文 Web 前端，支持把实验报告、课件、图片或笔记直接放进聊天窗口，解析后围绕同一文件连续提问。
 
+<img  alt="image" src="https://github.com/user-attachments/assets/1745a1d9-046c-4b8b-b5c7-17f4873c6f17" />
+
 ## 主要能力
 
 - 中文化学知识、实验现象、仪器用途、失败排查和实验报告问答。
